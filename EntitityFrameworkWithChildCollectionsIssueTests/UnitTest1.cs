@@ -60,7 +60,7 @@ namespace EntitityFrameworkWithChildCollectionsIssueTests
             // just to make sure
             await testDb.SaveChangesAsync();
             var data1 = testDb.TestDataWithListOfChildren.Include(x => x.Children).ToArray();
-            Assert.That(data1[0].Children.Count, Is.EqualTo(2));
+            Assert.That(data1[0].Children.Count, Is.EqualTo(2));    // everything still good
 
             testDb.Add(entry2);
 
@@ -72,10 +72,10 @@ namespace EntitityFrameworkWithChildCollectionsIssueTests
             Assert.That(testDb.TestSubData.Count(), Is.EqualTo(3));  // 3x TestSubData
 
             // why is the existing data modified when adding another entry
-            Assert.That(data1[0].Children.Count, Is.EqualTo(2));        // why is the shared child gone
+            Assert.That(data1[0].Children.Count, Is.EqualTo(2));        // acutal result = 1; why is the shared child gone
 
             var data2 = testDb.TestDataWithListOfChildren.Include(x => x.Children).ToArray();
-            Assert.That(data2[0].Children.Count, Is.EqualTo(2));        // why is the shared child gone
+            Assert.That(data2[0].Children.Count, Is.EqualTo(2));        // acutal result = 1; why is the shared child gone
             Assert.That(data2[1].Children.Count, Is.EqualTo(2));
         }
 
