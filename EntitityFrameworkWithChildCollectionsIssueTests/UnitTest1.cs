@@ -21,62 +21,62 @@ namespace EntitityFrameworkWithChildCollectionsIssueTests
             public TestSubData() : this(default) { }
         };
 
-        class TestDb : DbContext
-        {
-            public DbSet<TestDataWithListOfChildren> TestDataWithListOfChildren { get; set; } = default!;
-            public DbSet<TestSubData> TestSubData { get; set; } = default!;
-            public DbSet<TestDataWithTwoChildren> TestDataWithTwoChildren { get; set; } = default!;
+class TestDb : DbContext
+{
+    public DbSet<TestDataWithListOfChildren> TestDataWithListOfChildren { get; set; } = default!;
+    public DbSet<TestSubData> TestSubData { get; set; } = default!;
+    public DbSet<TestDataWithTwoChildren> TestDataWithTwoChildren { get; set; } = default!;
 
-            public TestDb() : base(new DbContextOptionsBuilder().UseInMemoryDatabase("testDb", new InMemoryDatabaseRoot()).Options) 
-            { }
+    public TestDb() : base(new DbContextOptionsBuilder().UseInMemoryDatabase("testDb", new InMemoryDatabaseRoot()).Options) 
+    { }
 
-            protected override void OnModelCreating(ModelBuilder modelBuilder)
-            {
-            }
-        }
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+    }
+}
 
         [Test]
         public async Task Test_WithListOfChildren()
         {
-            // Create DB
-            using TestDb testDb = new();
+    // Create DB
+    using TestDb testDb = new();
 
-            // define data
-            var sharedChild = new TestSubData("Shared", 1);
-            var entry1 = new TestDataWithListOfChildren("Max1", 
-                new List<TestSubData> {
-                    sharedChild,
-                    new TestSubData("unique #1",2)
-                });
-            var entry2 = new TestDataWithListOfChildren("Max2",
-                new List<TestSubData> {
-                    sharedChild,
-                    new TestSubData("unique #2",3)
-                });
+    // define data
+    var sharedChild = new TestSubData("Shared", 1);
+    var entry1 = new TestDataWithListOfChildren("Max1", 
+        new List<TestSubData> {
+            sharedChild,
+            new TestSubData("unique #1",2)
+        });
+    var entry2 = new TestDataWithListOfChildren("Max2",
+        new List<TestSubData> {
+            sharedChild,
+            new TestSubData("unique #2",3)
+        });
 
-            // now add the data, but try to replace existing sub-data with already existing entries
-            testDb.Add(entry1);
+    
+    testDb.Add(entry1);
 
-            // just to make sure
-            await testDb.SaveChangesAsync();
-            var data1 = testDb.TestDataWithListOfChildren.Include(x => x.Children).ToArray();
-            Assert.That(data1[0].Children.Count, Is.EqualTo(2));    // everything still good
+    // just to test and to make sure the data is there in the first place
+    await testDb.SaveChangesAsync();
+    var data1 = testDb.TestDataWithListOfChildren.Include(x => x.Children).ToArray();
+    Assert.That(data1[0].Children.Count, Is.EqualTo(2));    // everything still good
 
-            testDb.Add(entry2);
+    testDb.Add(entry2);
 
-            // Save DB
-            await testDb.SaveChangesAsync();
+    // Save DB
+    await testDb.SaveChangesAsync();
 
-            // ReadData and assert
-            Assert.That(testDb.TestDataWithListOfChildren.Count(), Is.EqualTo(2));  // 2x TestData
-            Assert.That(testDb.TestSubData.Count(), Is.EqualTo(3));  // 3x TestSubData
+    // ReadData and assert
+    Assert.That(testDb.TestDataWithListOfChildren.Count(), Is.EqualTo(2));  // 2x TestData
+    Assert.That(testDb.TestSubData.Count(), Is.EqualTo(3));  // 3x TestSubData
 
-            // why is the existing data modified when adding another entry
-            Assert.That(data1[0].Children.Count, Is.EqualTo(2));        // acutal result = 1; why is the shared child gone
+    // why is the existing data modified when adding another entry
+    Assert.That(data1[0].Children.Count, Is.EqualTo(2));        // acutal result = 1; why is the shared child gone
 
-            var data2 = testDb.TestDataWithListOfChildren.Include(x => x.Children).ToArray();
-            Assert.That(data2[0].Children.Count, Is.EqualTo(2));        // acutal result = 1; why is the shared child gone
-            Assert.That(data2[1].Children.Count, Is.EqualTo(2));
+    var data2 = testDb.TestDataWithListOfChildren.Include(x => x.Children).ToArray();
+    Assert.That(data2[0].Children.Count, Is.EqualTo(2));        // acutal result = 1; why is the shared child gone
+    Assert.That(data2[1].Children.Count, Is.EqualTo(2));
         }
 
         [Test]
