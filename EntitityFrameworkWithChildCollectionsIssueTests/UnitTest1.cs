@@ -19,6 +19,8 @@ namespace EntitityFrameworkWithChildCollectionsIssueTests
         {
             // for DB records we need a default constructor without parameters
             public TestSubData() : this(default) { }
+            public ICollection<TestDataWithListOfChildren> ParentTestDatas = new List<TestDataWithListOfChildren>();
+
         };
 
         class TestDb : DbContext
@@ -32,6 +34,9 @@ namespace EntitityFrameworkWithChildCollectionsIssueTests
 
             protected override void OnModelCreating(ModelBuilder modelBuilder)
             {
+                modelBuilder.Entity<TestDataWithListOfChildren>()
+                    .HasMany(t => t.Children)
+                    .WithMany(t => t.ParentTestDatas);
             }
         }
 
